@@ -1,0 +1,106 @@
+const cameraRef = useRef(null);
+const [audioStatus, setAudioStatus] = useState(false);
+const [recognizing, setRecognizing] = useState(false);
+const isProcessing = useRef(false);
+
+// 1. FUNÇÃO PARA FALAR (Com controle de escuta)
+function speakDescription(text, shouldListenAfter = false) {
+  setAudioStatus(true);
+  if (!text) return;
+
+  Speech.stop();
+  Speech.speak(text, {
+    language: "pt-BR",
+    onDone: () => {
+      setAudioStatus(false);
+      if (shouldListenAfter) {
+        // Delay para o sistema liberar o áudio antes de ligar o mic
+        setTimeout(() => ligarMic(), 600);
+      }
+    },
+    onError: () => setAudioStatus(false)
+  });
+}
+
+// 2. FUNÇÃO PARA LIGAR O MICROFONE (Reconhecimento de Voz)
+const ligarMic = async () => {
+  // Se estivermos processando uma foto ou falando, não liga o mic agora
+  if (isProcessing.current) return;
+
+  try {
+    const result = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+    if (!result.granted) return;
+
+    ExpoSpeechRecognitionModule.start({
+      lang: "pt-BR",
+      interimResults: false,
+      continuous: true,
+    });
+  } catch (e) {
+    console.error("Erro ao iniciar microfone:", e);
+  }
+};
+
+// 3. EVENTOS DE VOZ
+useSpeechRecognitionEvent("start", () => setRecognizing(true));
+useSpeechRecognitionEvent("end", () => {
+  setRecognizing(false);
+  // Se o mic desligar sozinho mas não estamos processando nada, liga de novo
+  if (!isProcessing.current) {
+    ligarMic();
+  }
+});
+
+useSpeechRecognitionEvent("result", (ev) => {
+  const text = ev.results[0]?.transcript.toLowerCase().trim();
+  console.log("Usuário disse:", text);
+
+  if (isProcessing.current) return;
+
+  // Regex para detectar "Aurora" + o que ela deve fazer
+  const regexGatilho = /aurora[, ]*(?:descreva|o que é|fale|veja),?\s*(.*)/i;
+
+  if (regexGatilho.test(text)) {
+    const comandoExtraido = text.match(regexGatilho)[1] || "descreva o ambiente";
+    handleCaptureFlow(comandoExtraido);
+  }
+});
+
+// 4. FLUXO DE CAPTURA E ANÁLISE
+const handleCaptureFlow = async (perguntaUsuario) => {
+  isProcessing.current = true; // TRAVA a escuta
+  ExpoSpeechRecognitionModule.stop(); // PARA o reconhecimento para não ouvir a si mesma
+
+  speakDescription("Entendido. Analisando a imagem agora.");
+
+  try {
+    const photoUri = await takePhoto();
+    
+    if (photoUri) {
+      // Envia para o backend (ajuste para enviar o TEXTO da pergunta junto)
+      const resultadoDescricao = await describeEnvironment(photoUri, perguntaUsuario);
+      
+      // Fala o resultado e, ao terminar, REATIVA o microfone (true)
+      speakDescription(resultadoDescricao, true);
+      isProcessing.current = false; // Destrava para permitir o onDone do speak
+    }
+  } catch (error) {
+    console.error("Erro no fluxo:", error);
+    speakDescription("Desculpe, tive um problema com a câmera ou conexão.", true);
+    isProcessing.current = false;
+  }
+};
+
+// 5. CONTROLE DA ABA (Focar/Sair)
+useFocusEffect(
+  useCallback(() => {
+    isProcessing.current = false;
+    speakDescription("Estou ouvindo.", true); // Já inicia o ciclo de escuta
+
+    return () => {
+      isProcessing.current = true; // Bloqueia reinicializações
+      ExpoSpeechRecognitionModule.stop();
+      Speech.stop();
+    };
+  }, [])
+);

@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "aurora-app",
+    "slug": "aurora-app",
+    "scheme": "aurora-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.auroraapp"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.auroraapp",
+      "permissions": [
+        "RECORD_AUDIO",
+        "MODIFY_AUDIO_SETTINGS"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    
+    "plugins": [
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "A Aurora precisa ouvir o seu comando para descrever a imagem."
+        }
+      ]
+    ]
+ 
+  }
+}
+
+
+ 

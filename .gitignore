@@ -1,0 +1,24 @@
+# Histórico do R
+*.Rhistory
+.Rhistory
+
+# Bancos de dados locais
+*.db
+*.db-journal
+
+# Pastas de Uploads (arquivos temporários/mídia)
+aurora-backend/uploads/
+aurora-backend/src/services/uploads/
+
+# Pastas do Expo e VS Code
+.expo/
+.vscode/
+
+# Módulos do Node (Evita rastrear dependências pesadas)
+node_modules/
+aurora-backend/node_modules/
+aurora-app/node_modules/
+
+# Pastas nativas geradas pelo Expo (opcional, mas recomendado se não for mexer em código nativo)
+aurora-app/android/
+aurora-app/ios/

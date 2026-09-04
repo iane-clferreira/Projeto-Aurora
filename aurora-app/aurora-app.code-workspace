@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"name": "aurora-app",
+			"path": "."
+		}
+	],
+	"settings": {
+		"java.configuration.updateBuildConfiguration": "interactive",
+		"java.compile.nullAnalysis.mode": "automatic"
+	}
+}
